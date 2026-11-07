@@ -28,6 +28,9 @@ class Settings(BaseSettings):
 
     rate_limit_ip_per_hour: int = Field(default=5, ge=1)
     rate_limit_email_per_hour: int = Field(default=3, ge=1)
+    # More links than this in one message -> 422 too_many_links.
+    max_links_per_message: int = Field(default=3, ge=0)
+    duplicate_window_hours: int = Field(default=24, ge=1)
     admin_session_hours: int = Field(default=8, ge=1)
 
     @property
