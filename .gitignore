@@ -5,3 +5,16 @@ out
 .env.production
 .DS_Store
 *.tsbuildinfo
+
+# Secrets: never commit real env files, only the examples
+.env
+.env.*
+!.env.example
+
+# Python / backend
+backend/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
