@@ -1,0 +1,84 @@
+import type { SiteContent } from "./types";
+
+export const en: SiteContent = {
+  seo: {
+    title: "Meraki | Practical digital solutions for small businesses",
+    description: "Meraki helps small and medium-sized businesses in Syria and the Arab region with websites, web applications, business and IT guidance, and marketing.",
+  },
+  brand: { descriptor: "Ideas. Solutions. Impact." },
+  navigation: { home: "Home", services: "Services", approach: "Our process", work: "Our work", about: "About", contact: "Contact", menu: "Open menu", close: "Close menu", switchLang: "Switch to Arabic" },
+  labels: { discover: "Discover", build: "Build", grow: "Grow", scroll: "Discover what we do", learnMore: "Learn more", comingSoon: "Coming soon", home: "Homepage", principles: "What guides us" },
+  hero: {
+    eyebrow: "Practical solutions for small and growing businesses in Syria and the Arab region",
+    lineOne: "Your ideas deserve",
+    lineTwo: "a brighter reality.",
+    description: "Starting a business or improving an existing one? We help you establish your online presence, simplify everyday operations, and reach customers with practical solutions sized to your goals and budget — one step at a time.",
+    primary: "Explore our services", secondary: "See how we work",
+    highlights: ["Built for your business size", "Clear scope and costs", "Support beyond launch"],
+  },
+  visual: {
+    eyebrow: "ONE CONNECTED JOURNEY",
+    title: "From possibility to progress", coreLabel: "IDEA → IMPACT",
+    phases: ["Understand", "Create", "Evolve"],
+    descriptions: ["Clarify your goals, opportunities and constraints before committing resources.", "Shape a practical solution, build in increments and validate continuously.", "Launch with care, learn from real users and improve with purpose."],
+    note: "A simple view of how we think about lasting value.",
+  },
+  services: {
+    eyebrow: "WHAT WE DO", heading: "One partner. Three ways to move forward.",
+    description: "From a local shop or service office to a growing company, we focus on the tools and decisions you actually need — without unnecessary cost or complexity.",
+    items: [
+      {
+        id: "web-applications", number: "01", icon: "code", title: "Websites & web applications", short: "Business websites, bookings, orders, and dashboards built around your needs.",
+        description: "We build company websites and practical tools for bookings, orders, or daily operations, from requirements and user experience to implementation, testing, launch, and ongoing support. We start with the most valuable features and expand based on priorities and real usage.",
+        deliverables: ["Requirements and user-friendly design", "Website, application, and API development", "Testing, launch, and ongoing support"],
+      },
+      {
+        id: "consulting", number: "02", icon: "compass", title: "Business & IT guidance", short: "A realistic plan before an expensive experiment.",
+        description: "Before investing in a new idea or software system, we help clarify the business model, target customers, initial feasibility, likely costs, and key risks. Together, we identify what to build now, what can wait, and which technologies fit your resources.",
+        deliverables: ["Initial feasibility and needs assessment", "Risks, opportunities, and priorities", "Practical technology and delivery roadmap"],
+      },
+      {
+        id: "marketing", number: "03", icon: "megaphone", title: "Marketing & advertising", short: "Help local customers discover what makes your business valuable.",
+        description: "We help local businesses communicate clearly through customer research, brand messaging, visual identity, social-media content, and carefully scoped digital campaigns. We choose realistic channels and track results with your available budget, without promising guaranteed sales.",
+        deliverables: ["Audience research and brand messaging", "Creative content and advertising campaigns", "Performance tracking and improvements"],
+      },
+    ],
+    footer: "Not every business needs a large system or a broad campaign. We start with manageable work that delivers practical value.",
+  },
+  approach: {
+    eyebrow: "HOW WE WORK", heading: "A clear process. A collaborative journey.",
+    description: "You don't need a technical background to work with us. We explain your options in plain language, agree on priorities and expected costs, and keep you involved in important decisions.",
+    steps: [
+      { number: "01", title: "Start with your idea", short: "We listen first: the problem, the audience, the opportunity, and what success means to you.", outcome: "Shared understanding" },
+      { number: "02", title: "Evaluate feasibility & risk", short: "We review market needs, available resources, expected costs, and risks to identify a sensible starting point.", outcome: "Prioritized recommendations" },
+      { number: "03", title: "Plan together, stay aligned", short: "We agree on scope, stages, and progress updates and explain key decisions without unnecessary jargon.", outcome: "Visible milestones" },
+      { number: "04", title: "Build, test & iterate", short: "We work in Agile increments. Features are reviewed and rigorously tested before being considered ready for production.", outcome: "Validated releases" },
+      { number: "05", title: "Launch, maintain & improve", short: "We support deployment and what follows: reliability, feedback, fixes, and continuous improvement, with transparent and professional delivery.", outcome: "Long-term progress" },
+    ],
+    pledgeHeading: "No surprises. No shortcuts on trust.",
+    pledgeText: "We value clear commitments, documented decisions, sensible security practices, honest communication, and quality over inflated promises. We'll tell you what we know, what we don't, and what needs to change.",
+    values: ["Transparency", "Quality & security", "Client collaboration", "Continuous improvement"],
+  },
+  about: {
+    eyebrow: "ABOUT MERAKI", title: "Thoughtful work starts with understanding people.",
+    lead: "Meraki is an early-stage team focused first on small and medium-sized businesses in Syria and the Arab region. We combine software engineering, business thinking, and creative communication to offer practical work that matches customer needs and a small team's delivery capacity.",
+    sections: [
+      { title: "Problem first", description: "We focus on understanding the real challenge before choosing a framework, feature, or campaign." },
+      { title: "Build with you", description: "We favor close collaboration, shared decisions, and clear, regular updates." },
+      { title: "Own the outcome", description: "We plan for what happens after launch — support, feedback, and responsible improvement." },
+    ],
+  },
+  work: {
+    eyebrow: "PORTFOLIO", heading: "Good work deserves a real story.", intro: "Our portfolio will grow as we release products and publish genuine technical demonstrations. We won't present conceptual designs as existing client projects.",
+    emptyTitle: "The first stories are on their way.", emptyText: "We're building our foundation. As projects become ready to share, this space will show what we built, why we built it, and what we learned.",
+    kind: { Product: "Product", Demo: "Technical demo", "Client work": "Client work" }, challenge: "The challenge", solution: "Our solution", outcome: "The outcome", technologies: "Technologies",
+  },
+  contact: {
+    eyebrow: "LET'S TALK", heading: "Tell us about your business. We'll find the starting point.", description: "Running a shop, office, service business, or exploring a new idea? Message us on WhatsApp to describe your challenge. We'll discuss suitable options and practical next steps — without a lengthy form.",
+    whatsapp: "Chat with us on WhatsApp", pending: "WhatsApp contact is being prepared", pendingDetail: "Add your verified company number to activate the contact button before publishing.",
+    prompt: "Before you message us", message: "Hello Meraki team, I have a business or project idea and would like to discuss my needs and suitable services.",
+    details: ["What does your business do?", "What problem do you need to solve now?", "Do you have an approximate budget or timeline?"],
+  },
+  footer: { tagline: "From a promising idea to meaningful impact.", copyright: "All rights reserved.", note: "Made with clarity, care, and purpose." },
+  notFound: { title: "We couldn't find that page.", description: "The link may have changed, or the page isn't available yet.", action: "Return home" },
+};
