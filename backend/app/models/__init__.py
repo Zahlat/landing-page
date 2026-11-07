@@ -2,5 +2,6 @@
 (Alembic autogenerate and the test suite rely on this)."""
 
 from app.models.base import Base
+from app.models.contact_message import ContactMessage
 
-__all__ = ["Base"]
+__all__ = ["Base", "ContactMessage"]
