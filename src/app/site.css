@@ -207,3 +207,24 @@ button,a{-webkit-tap-highlight-color:transparent}
 .whatsapp-number{font-size:13px;font-weight:700;letter-spacing:.035em;unicode-bidi:isolate;color:#d8f4e1;white-space:nowrap}
 .contact-page .whatsapp-number{color:#3e7657}
 @media(max-width:630px){.whatsapp-contact{align-items:stretch}.whatsapp-number{text-align:center}}
+
+/* Contact form: logical properties only, so it mirrors correctly on /ar. */
+.contact-form{margin-top:42px;padding-top:36px;border-top:1px solid var(--border);display:grid;gap:20px;min-width:0}
+.contact-form h2{font-size:24px;margin:0;line-height:1.5}
+.contact-form-intro{margin:-12px 0 0;font-size:15px;line-height:1.9;color:var(--muted)}
+.contact-form-row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.contact-field{display:grid;gap:8px;min-width:0;align-content:start}
+.contact-field label{font-size:14px;font-weight:700;color:var(--green-dark)}
+.contact-field input,.contact-field select,.contact-field textarea{width:100%;box-sizing:border-box;font:inherit;font-size:15px;line-height:1.6;color:var(--text);background:#fff;border:1px solid #c7dfcc;border-radius:11px;padding:12px 14px;transition:border .2s,box-shadow .2s}
+.contact-field textarea{resize:vertical;min-height:140px}
+.contact-field input::placeholder,.contact-field textarea::placeholder{color:#8aa394}
+.contact-field input:focus,.contact-field select:focus,.contact-field textarea:focus{outline:none;border-color:var(--green-2);box-shadow:0 0 0 3px var(--lime)}
+.contact-field [aria-invalid="true"]{border-color:#b3372f}
+.contact-field-error,.contact-form-alert{margin:0;font-size:13px;line-height:1.7;color:#a12c25}
+.contact-form-alert{font-size:14px;background:#fdf1f0;border:1px solid #f3d0cd;border-radius:11px;padding:12px 14px}
+.contact-form-success{margin:0;font-size:14px;line-height:1.8;color:var(--green-dark);background:var(--mist-strong);border:1px solid #bfe3ca;border-radius:11px;padding:12px 14px}
+.contact-form-submit{justify-self:start;cursor:pointer}
+.contact-form-submit:disabled{opacity:.65;cursor:wait;transform:none}
+/* Honeypot: clipped rather than positioned off-screen, which would add scroll on RTL pages. */
+.contact-honeypot{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(max-width:630px){.contact-form-row{grid-template-columns:1fr}.contact-form-submit{justify-self:stretch}}

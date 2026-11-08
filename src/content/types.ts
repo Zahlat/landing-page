@@ -14,6 +14,35 @@ export type MethodStep = {
   short: string;
   outcome: string;
 };
+export type ContactFormErrors = {
+  nameRequired: string;
+  nameTooLong: string;
+  emailInvalid: string;
+  typeRequired: string;
+  contentTooShort: string;
+  contentTooLong: string;
+  tooManyLinks: string;
+  rateLimited: string;
+  server: string;
+};
+export type ContactFormCopy = {
+  heading: string;
+  intro: string;
+  name: string;
+  namePlaceholder: string;
+  email: string;
+  emailPlaceholder: string;
+  type: string;
+  typePlaceholder: string;
+  types: Record<"suggestion" | "request" | "question" | "other", string>;
+  content: string;
+  contentPlaceholder: string;
+  honeypot: string;
+  submit: string;
+  sending: string;
+  success: string;
+  errors: ContactFormErrors;
+};
 export type SiteContent = {
   seo: { title: string; description: string };
   brand: { descriptor: string };
@@ -25,7 +54,7 @@ export type SiteContent = {
   approach: { eyebrow: string; heading: string; description: string; steps: MethodStep[]; pledgeHeading: string; pledgeText: string; values: string[] };
   about: { eyebrow: string; title: string; lead: string; sections: { title: string; description: string }[] };
   work: { eyebrow: string; heading: string; intro: string; emptyTitle: string; emptyText: string; kind: Record<"Product" | "Demo" | "Client work", string>; challenge: string; solution: string; outcome: string; technologies: string };
-  contact: { eyebrow: string; heading: string; description: string; whatsapp: string; pending: string; pendingDetail: string; prompt: string; message: string; details: string[] };
+  contact: { eyebrow: string; heading: string; description: string; whatsapp: string; pending: string; pendingDetail: string; prompt: string; message: string; details: string[]; form: ContactFormCopy };
   footer: { tagline: string; copyright: string; note: string };
   notFound: { title: string; description: string; action: string };
 };
