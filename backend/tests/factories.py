@@ -8,6 +8,9 @@ from typing import Any
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import hash_token, new_session_token
+from app.models.admin_session import AdminSession
+from app.models.admin_user import AdminUser
 from app.models.contact_message import ContactMessage
 from app.models.enums import Locale, MessageType
 
@@ -42,3 +45,23 @@ async def insert_message(
     db.add(msg)
     await db.flush()
     return msg
+
+
+async def create_admin_session(db: AsyncSession, email: str = "admin@example.com") -> str:
+    """Admin + live session, without a slow Argon2 login. Returns the raw bearer token."""
+    # Satisfies the CHECK constraint; never verified because no password login happens.
+    user = AdminUser(email=email, password_hash="$argon2id$not-a-real-hash")
+    db.add(user)
+    await db.flush()
+    token = new_session_token()
+    now = (await db.execute(sa.select(sa.func.now()))).scalar_one()
+    db.add(
+        AdminSession(
+            token_hash=hash_token(token),
+            admin_user_id=user.id,
+            created_at=now,
+            expires_at=now + timedelta(hours=8),
+        )
+    )
+    await db.flush()
+    return token

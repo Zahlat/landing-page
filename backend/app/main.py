@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, Depends, FastAPI
 
 from app.api.deps import require_internal_token
-from app.api.routes import admin_auth, health, messages
+from app.api.routes import admin_auth, admin_messages, health, messages
 from app.core.body_limit import BodySizeLimitMiddleware
 from app.core.config import Settings, get_settings
 from app.core.db import make_engine, make_sessionmaker
@@ -17,6 +17,7 @@ def build_v1_router() -> APIRouter:
     router = APIRouter(prefix="/v1", dependencies=[Depends(require_internal_token)])
     router.include_router(messages.router)
     router.include_router(admin_auth.router)
+    router.include_router(admin_messages.router)
     return router
 
 

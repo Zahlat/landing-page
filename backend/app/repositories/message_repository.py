@@ -1,12 +1,15 @@
-from datetime import timedelta
+from collections.abc import Sequence
+from datetime import datetime, timedelta
 from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
-from app.models.contact_message import ContactMessage
-from app.repositories.common import WindowCount, advisory_lock
+from app.core.pagination import Cursor
+from app.models.contact_message import PREVIEW_CHARS, ContactMessage
+from app.models.enums import MessageStatus, MessageType
+from app.repositories.common import WindowCount, advisory_lock, db_now
 
 __all__ = ["MessageRepository", "WindowCount"]
 
@@ -24,6 +27,63 @@ class MessageRepository:
 
     async def lock(self, *keys: str) -> None:
         await advisory_lock(self.session, *keys)
+
+    async def now(self) -> datetime:
+        return await db_now(self.session)
+
+    # --- admin ----------------------------------------------------------------
+
+    async def list_page(
+        self,
+        *,
+        status: MessageStatus | None,
+        message_type: MessageType | None,
+        cursor: Cursor | None,
+        limit: int,
+    ) -> Sequence[sa.Row[Any]]:
+        """Up to `limit` rows, newest first, after the cursor. Keyset, never OFFSET.
+        Selects only a preview, so full message text never loads for the list."""
+        stmt = sa.select(
+            ContactMessage.id,
+            ContactMessage.created_at,
+            ContactMessage.name,
+            ContactMessage.email,
+            ContactMessage.type,
+            ContactMessage.status,
+            sa.func.left(ContactMessage.content, PREVIEW_CHARS).label("preview"),
+        )
+        if status is not None:
+            stmt = stmt.where(ContactMessage.status == status)
+        if message_type is not None:
+            stmt = stmt.where(ContactMessage.type == message_type)
+        if cursor is not None:
+            stmt = stmt.where(
+                sa.tuple_(ContactMessage.created_at, ContactMessage.id)
+                < sa.tuple_(
+                    sa.literal(cursor.created_at, sa.DateTime(timezone=True)),
+                    sa.literal(cursor.id, sa.BigInteger),
+                )
+            )
+        stmt = stmt.order_by(ContactMessage.created_at.desc(), ContactMessage.id.desc())
+        return (await self.session.execute(stmt.limit(limit))).all()
+
+    async def status_counts(self) -> dict[MessageStatus, int]:
+        stmt = sa.select(ContactMessage.status, sa.func.count()).group_by(ContactMessage.status)
+        return {status: count for status, count in (await self.session.execute(stmt)).all()}
+
+    async def get(self, message_id: int, *, for_update: bool = False) -> ContactMessage | None:
+        stmt = sa.select(ContactMessage).where(ContactMessage.id == message_id)
+        if for_update:
+            stmt = stmt.with_for_update()
+        return (await self.session.execute(stmt)).scalar_one_or_none()
+
+    async def delete(self, message_id: int) -> bool:
+        stmt = (
+            sa.delete(ContactMessage)
+            .where(ContactMessage.id == message_id)
+            .returning(ContactMessage.id)
+        )
+        return (await self.session.execute(stmt)).scalar_one_or_none() is not None
 
     async def _count_since(
         self, column: InstrumentedAttribute[Any], value: str, window: timedelta
