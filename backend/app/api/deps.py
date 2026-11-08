@@ -3,15 +3,26 @@
 import hmac
 from typing import Annotated
 
-from fastapi import Header, Request
+from fastapi import Depends, Header, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
 from app.core.db import get_db
 from app.core.errors import AppError
 from app.core.security import normalize_ip
+from app.services.auth_service import AdminContext, AuthService
 from app.services.message_service import ClientInfo
 
-__all__ = ["client_info", "get_db", "get_settings_dep", "require_internal_token"]
+__all__ = [
+    "client_info",
+    "current_admin",
+    "get_db",
+    "get_settings_dep",
+    "require_internal_token",
+]
+
+# Real tokens are 43 chars; anything far longer is junk and not worth hashing.
+_MAX_BEARER_LEN = 256
 
 
 def get_settings_dep(request: Request) -> Settings:
@@ -43,3 +54,26 @@ def client_info(
     """
     ua = x_client_ua.strip() if x_client_ua else None
     return ClientInfo(ip=normalize_ip(x_client_ip), user_agent=ua or None)
+
+
+def _bearer_token(authorization: str | None) -> str | None:
+    if not authorization:
+        return None
+    scheme, _, token = authorization.partition(" ")
+    token = token.strip()
+    if scheme.lower() != "bearer" or not token or len(token) > _MAX_BEARER_LEN:
+        return None
+    return token
+
+
+async def current_admin(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    settings: Annotated[Settings, Depends(get_settings_dep)],
+    authorization: Annotated[str | None, Header()] = None,
+) -> AdminContext:
+    """Admin from `Authorization: Bearer <session token>`; 401 for anything else.
+    Runs after require_internal_token (router-level dependencies run first)."""
+    token = _bearer_token(authorization)
+    if token is None:
+        raise AppError(401, "unauthorized", "Unauthorized.")
+    return await AuthService(db, settings).authenticate(token)

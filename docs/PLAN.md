@@ -91,6 +91,19 @@ Indexes, each one matching a real query:
 | expires_at | TIMESTAMPTZ | NOT NULL, created_at + 8 h |
 | revoked_at | TIMESTAMPTZ | Nullable, set on logout |
 
+### admin_login_attempts
+
+Added in Phase 4: the per-IP login limit (spam table row 8) needs a durable, shared counter. Stores no email and no raw IP.
+
+| Column | Type | Rules |
+|---|---|---|
+| id | BIGINT IDENTITY | PK |
+| ip_hash | CHAR(64) | NOT NULL, HMAC-SHA256 of the client IP |
+| succeeded | BOOLEAN | NOT NULL, default false |
+| created_at | TIMESTAMPTZ | NOT NULL, default now() |
+
+Index: `(ip_hash, created_at)` for the per-IP count.
+
 ## API contract (FastAPI)
 
 All routes are under `/v1` and every request must carry `X-Internal-Token: <shared secret>`. A missing or wrong token gets 401, checked with `hmac.compare_digest`. Only Next.js knows the token. Interactive docs (`/docs`, `/openapi.json`) are on in dev and off in production.

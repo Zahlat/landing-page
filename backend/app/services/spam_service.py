@@ -5,7 +5,6 @@ Rate limits count stored rows in Postgres, so they are exact, survive restarts a
 are shared between workers. Duplicates are not stored, so they don't count.
 """
 
-import math
 import re
 from datetime import timedelta
 from enum import StrEnum
@@ -13,6 +12,7 @@ from enum import StrEnum
 from app.core.config import Settings
 from app.core.errors import AppError
 from app.repositories.message_repository import MessageRepository, WindowCount
+from app.services.limits import retry_after_seconds
 
 RATE_WINDOW = timedelta(hours=1)
 
@@ -25,12 +25,7 @@ def count_links(content: str) -> int:
     return len(_URL_RE.findall(content))
 
 
-def retry_after_seconds(window_count: WindowCount, window: timedelta) -> int:
-    """Seconds until the oldest counted row leaves the window (always >= 1)."""
-    if window_count.oldest is None:
-        return 1
-    remaining = (window_count.oldest + window - window_count.now).total_seconds()
-    return max(1, math.ceil(remaining))
+__all__ = ["RATE_WINDOW", "SpamService", "SpamVerdict", "count_links", "retry_after_seconds"]
 
 
 class SpamVerdict(StrEnum):

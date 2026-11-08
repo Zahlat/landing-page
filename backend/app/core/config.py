@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     max_links_per_message: int = Field(default=3, ge=0)
     duplicate_window_hours: int = Field(default=24, ge=1)
     admin_session_hours: int = Field(default=8, ge=1)
+    # Per account: this many consecutive failures -> locked for login_lockout_minutes.
+    login_max_failures: int = Field(default=5, ge=1)
+    login_lockout_minutes: int = Field(default=15, ge=1)
+    # Per IP: at most this many login attempts (any outcome) per login_ip_window_minutes.
+    login_ip_max_attempts: int = Field(default=10, ge=1)
+    login_ip_window_minutes: int = Field(default=15, ge=1)
 
     @property
     def is_prod(self) -> bool:

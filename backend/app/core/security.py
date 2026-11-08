@@ -3,8 +3,48 @@
 import hashlib
 import hmac
 import ipaddress
+import secrets
+
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 
 UNKNOWN_IP = "unknown"
+
+# --- passwords (Argon2id) ----------------------------------------------------------
+
+# argon2-cffi defaults follow RFC 9106's low-memory profile and use Argon2id.
+_hasher = PasswordHasher()
+
+# Verified against when the email doesn't exist, so unknown and known emails take
+# about the same time. Built at import with the same parameters as real hashes.
+DUMMY_PASSWORD_HASH = _hasher.hash(secrets.token_urlsafe(32))
+
+
+def hash_password(password: str) -> str:
+    return _hasher.hash(password)
+
+
+def verify_password(password_hash: str, password: str) -> bool:
+    try:
+        return _hasher.verify(password_hash, password)
+    except (VerifyMismatchError, VerificationError, InvalidHashError):
+        return False
+
+
+def password_needs_rehash(password_hash: str) -> bool:
+    return _hasher.check_needs_rehash(password_hash)
+
+
+# --- session tokens ----------------------------------------------------------------
+
+
+def new_session_token() -> str:
+    """32 random bytes, URL-safe (43 chars). Only its hash is stored."""
+    return secrets.token_urlsafe(32)
+
+
+def hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 def normalize_ip(raw: str | None) -> str:

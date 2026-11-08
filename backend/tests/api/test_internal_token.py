@@ -1,13 +1,12 @@
 from collections.abc import AsyncIterator
 
 import pytest
-from fastapi import FastAPI
-from fastapi.dependencies.models import Dependant
-from fastapi.routing import APIRoute
+from fastapi import APIRouter, FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from app.api.deps import require_internal_token
-from app.main import build_v1_router, create_app
+from app.main import build_v1_router
+from tests.route_guards import documented_routes, routes_not_rejected
 
 
 @pytest.fixture
@@ -82,18 +81,25 @@ async def test_unhandled_error_hides_details(
     assert "Traceback" not in resp.text
 
 
-def _depends_on(dependant: Dependant, target: object) -> bool:
-    return any(d.call is target or _depends_on(d, target) for d in dependant.dependencies)
-
-
-def test_every_v1_route_requires_internal_token() -> None:
+async def test_every_v1_route_requires_internal_token(app: FastAPI, client: AsyncClient) -> None:
     """Guard for later phases: no /v1 route may skip the internal-token check."""
-    application = create_app()
-    v1_routes = [
-        r for r in application.routes if isinstance(r, APIRoute) and r.path.startswith("/v1")
-    ]
-    for route in v1_routes:
-        assert _depends_on(route.dependant, require_internal_token), route.path
+    routes = documented_routes(app, "/v1")
+    # Non-vacuous: if route discovery ever breaks, this fails instead of checking nothing.
+    assert {("POST", "/v1/messages"), ("POST", "/v1/admin/auth/login")} <= set(routes)
+    assert await routes_not_rejected(client, routes) == []
+
+
+async def test_route_guard_detects_an_unprotected_route(app: FastAPI, client: AsyncClient) -> None:
+    """Proves the guard above can fail: a router without the dependency gets caught."""
+    unprotected = APIRouter(prefix="/v1")
+
+    @unprotected.get("/leak")
+    async def leak() -> dict[str, str]:
+        return {"secret": "data"}
+
+    app.include_router(unprotected)
+    routes = documented_routes(app, "/v1")
+    assert await routes_not_rejected(client, routes) == [("GET", "/v1/leak")]
 
 
 def test_v1_router_carries_dependency() -> None:

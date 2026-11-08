@@ -1,5 +1,4 @@
-from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any
 
 import sqlalchemy as sa
@@ -7,15 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 
 from app.models.contact_message import ContactMessage
+from app.repositories.common import WindowCount, advisory_lock
 
-
-@dataclass(frozen=True)
-class WindowCount:
-    """Rows inside a sliding window, the oldest of them, and the DB's now()."""
-
-    count: int
-    oldest: datetime | None
-    now: datetime
+__all__ = ["MessageRepository", "WindowCount"]
 
 
 class MessageRepository:
@@ -30,13 +23,7 @@ class MessageRepository:
         return message
 
     async def lock(self, *keys: str) -> None:
-        """Transaction-scoped advisory locks, so two concurrent requests for the same
-        IP/email can't both pass a count check. Released on commit/rollback.
-        Keys are sorted to keep lock order stable (no deadlocks)."""
-        for key in sorted(set(keys)):
-            await self.session.execute(
-                sa.select(sa.func.pg_advisory_xact_lock(sa.func.hashtextextended(key, 0)))
-            )
+        await advisory_lock(self.session, *keys)
 
     async def _count_since(
         self, column: InstrumentedAttribute[Any], value: str, window: timedelta
