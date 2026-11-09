@@ -35,8 +35,8 @@ def _database_url() -> str:
     if context.get_x_argument(as_dictionary=True).get("db") == "test":
         if not settings.test_database_url:
             raise RuntimeError("TEST_DATABASE_URL is not set")
-        return settings.test_database_url
-    return settings.database_url
+        return settings.test_database_url.get_secret_value()
+    return settings.database_url.get_secret_value()
 
 
 def run_migrations_offline() -> None:

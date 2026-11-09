@@ -23,6 +23,7 @@ export type ContactFormErrors = {
   contentTooLong: string;
   tooManyLinks: string;
   rateLimited: string;
+  formExpired: string;
   server: string;
 };
 export type ContactFormCopy = {

@@ -9,13 +9,22 @@ from app.models.enums import Locale, MessageStatus, MessageType
 LowerEmail = Annotated[EmailStr, Field(max_length=EMAIL_MAX), AfterValidator(str.lower)]
 
 
+def _reject_nul(value: str) -> str:
+    # Postgres text can't hold U+0000, so it must be refused here rather than crash the insert.
+    if "\x00" in value:
+        raise ValueError("NUL characters are not allowed")
+    return value
+
+
 class MessageCreate(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    name: Annotated[str, Field(min_length=1, max_length=NAME_MAX)]
+    name: Annotated[str, Field(min_length=1, max_length=NAME_MAX), AfterValidator(_reject_nul)]
     email: LowerEmail
     type: MessageType
-    content: Annotated[str, Field(min_length=CONTENT_MIN, max_length=CONTENT_MAX)]
+    content: Annotated[
+        str, Field(min_length=CONTENT_MIN, max_length=CONTENT_MAX), AfterValidator(_reject_nul)
+    ]
     locale: Locale
 
 

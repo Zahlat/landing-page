@@ -221,9 +221,8 @@ async def test_lockout_after_five_failures(
 
     # Locked now: even the correct password is refused.
     resp = await login(client, headers)
-    assert resp.status_code == 429
-    assert resp.json()["error"]["code"] == "account_locked"
-    assert 1 <= int(resp.headers["Retry-After"]) <= 15 * 60
+    assert resp.status_code == 401
+    assert resp.json() == INVALID
     sessions = await db_session.execute(sa.select(sa.func.count()).select_from(AdminSession))
     assert sessions.scalar_one() == 0
 

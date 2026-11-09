@@ -98,6 +98,7 @@ export const en: SiteContent = {
         contentTooLong: "That message is too long. The limit is 5000 characters.",
         tooManyLinks: "That message has too many links. Please include three at most.",
         rateLimited: "You've sent several messages in a short time. Please try again later.",
+        formExpired: "This page was open for a long time, so your message wasn't sent yet. Your text is still here; please press Send message again.",
         server: "We couldn't send your message right now. Please try again later or reach us on WhatsApp.",
       },
     },

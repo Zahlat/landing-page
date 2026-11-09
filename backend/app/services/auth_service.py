@@ -5,7 +5,7 @@ Login order:
 2. Record the attempt.
 3. Load the user FOR UPDATE (serializes concurrent logins for one account).
 4. Unknown email / inactive user -> verify against a dummy hash, 401.
-5. Locked account -> verify against a dummy hash, 429 with Retry-After.
+5. Locked account -> verify against a dummy hash, the same 401 as a wrong password.
 6. Wrong password -> failed_login_count += 1; at the limit, lock and reset; 401.
 7. Success -> reset counters, set last_login_at, create session, 200.
 
@@ -28,12 +28,13 @@ from app.core.security import (
     hash_token,
     new_session_token,
     password_needs_rehash,
+    run_argon2,
     verify_password,
 )
 from app.models.admin_session import AdminSession
 from app.models.admin_user import AdminUser
 from app.repositories.admin_repository import AdminRepository
-from app.services.limits import retry_after_seconds, seconds_until
+from app.services.limits import retry_after_seconds
 
 logger = logging.getLogger("app.auth")
 
@@ -90,24 +91,20 @@ class AuthService:
         user = await self.repo.get_user_by_email(email, for_update=True)
 
         if user is None or not user.is_active:
-            verify_password(DUMMY_PASSWORD_HASH, password)  # equalize timing
+            await run_argon2(verify_password, DUMMY_PASSWORD_HASH, password)  # equalize timing
             await self.session.commit()
             logger.info("login_failed reason=unknown_or_inactive")
             raise _invalid_credentials()
 
         now = await self.repo.now()
         if user.locked_until is not None and user.locked_until > now:
-            verify_password(DUMMY_PASSWORD_HASH, password)
+            await run_argon2(verify_password, DUMMY_PASSWORD_HASH, password)
             await self.session.commit()
             logger.info("login_blocked_locked user_id=%s", user.id)
-            raise AppError(
-                429,
-                "account_locked",
-                "Too many failed attempts. Please try again later.",
-                headers={"Retry-After": str(seconds_until(user.locked_until, now))},
-            )
+            # Same answer as a wrong password: a distinct response would confirm the email exists.
+            raise _invalid_credentials()
 
-        if not verify_password(user.password_hash, password):
+        if not await run_argon2(verify_password, user.password_hash, password):
             user.failed_login_count += 1
             if user.failed_login_count >= s.login_max_failures:
                 user.locked_until = now + timedelta(minutes=s.login_lockout_minutes)
@@ -119,7 +116,7 @@ class AuthService:
 
         # Success.
         if password_needs_rehash(user.password_hash):
-            user.password_hash = hash_password(password)
+            user.password_hash = await run_argon2(hash_password, password)
         user.failed_login_count = 0
         user.locked_until = None
         user.last_login_at = now
@@ -161,8 +158,7 @@ class AuthService:
             raise ValueError(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.")
         if await self.repo.get_user_by_email(email) is not None:
             raise ValueError("An admin with that email already exists.")
-        user = await self.repo.add_user(
-            AdminUser(email=email, password_hash=hash_password(password))
-        )
+        password_hash = await run_argon2(hash_password, password)
+        user = await self.repo.add_user(AdminUser(email=email, password_hash=password_hash))
         await self.session.commit()
         return user

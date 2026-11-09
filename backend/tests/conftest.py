@@ -14,6 +14,7 @@ from alembic import command
 from alembic.config import Config
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from pydantic import SecretStr
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
@@ -26,20 +27,21 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 
 def _load_test_settings() -> Settings:
     base = Settings()
-    test_url = base.test_database_url
-    if not test_url:
+    if base.test_database_url is None or not base.test_database_url.get_secret_value():
         raise pytest.UsageError("TEST_DATABASE_URL is not set; refusing to run tests.")
-    if test_url == base.database_url:
+    test_url = base.test_database_url.get_secret_value()
+    if test_url == base.database_url.get_secret_value():
         raise pytest.UsageError("TEST_DATABASE_URL must differ from DATABASE_URL.")
     db_name = make_url(test_url).database or ""
     if not db_name.endswith("_test"):
         raise pytest.UsageError(
             f"Test database name must end in '_test' (got {db_name!r}); refusing to run."
         )
-    return base.model_copy(update={"environment": "test", "database_url": test_url})
+    return base.model_copy(update={"environment": "test", "database_url": SecretStr(test_url)})
 
 
 TEST_SETTINGS = _load_test_settings()
+TEST_DATABASE_URL = TEST_SETTINGS.database_url.get_secret_value()
 INTERNAL_HEADERS = {"X-Internal-Token": TEST_SETTINGS.internal_token.get_secret_value()}
 
 
@@ -58,7 +60,7 @@ def _migrate_test_db() -> Iterator[None]:
     cfg = Config(str(BACKEND_DIR / "alembic.ini"))
     cfg.set_main_option("script_location", str(BACKEND_DIR / "migrations"))
     # configparser treats % as interpolation; escape it in passwords.
-    cfg.set_main_option("sqlalchemy.url", TEST_SETTINGS.database_url.replace("%", "%%"))
+    cfg.set_main_option("sqlalchemy.url", TEST_DATABASE_URL.replace("%", "%%"))
     cfg.attributes["configure_logger"] = False
     command.upgrade(cfg, "head")
     yield
@@ -66,7 +68,7 @@ def _migrate_test_db() -> Iterator[None]:
 
 @pytest.fixture(scope="session")
 async def engine() -> AsyncIterator[AsyncEngine]:
-    eng = make_engine(TEST_SETTINGS.database_url)
+    eng = make_engine(TEST_DATABASE_URL)
     yield eng
     await eng.dispose()
 

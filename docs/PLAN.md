@@ -112,7 +112,7 @@ All routes are under `/v1` and every request must carry `X-Internal-Token: <shar
 |---|---|---|---|
 | GET /health | none | — | 200 `{"status":"ok"}` (also checks the DB connection) |
 | POST /v1/messages | internal token | body `{name, email, type, content, locale}`, headers `X-Client-IP`, `X-Client-UA` | 202 `{"status":"received"}` · 422 validation · 429 + Retry-After |
-| POST /v1/admin/auth/login | internal token | `{email, password}` + `X-Client-IP` | 200 `{token, expires_at}` · 401 generic "invalid credentials" · 429 when locked |
+| POST /v1/admin/auth/login | internal token | `{email, password}` + `X-Client-IP` | 200 `{token, expires_at}` · 401 generic "invalid credentials" (also when locked, so locked accounts can't be told from unknown emails) · 429 per-IP limit |
 | POST /v1/admin/auth/logout | admin bearer | — | 204 (session revoked) |
 | GET /v1/admin/me | admin bearer | — | 200 `{email}` |
 | GET /v1/admin/messages | admin bearer | query `status?`, `type?`, `cursor?`, `limit` (1–50, default 20) | 200 `{items:[…], next_cursor}` |
@@ -139,13 +139,13 @@ The layers below cost nothing and need no outside service. Cheap checks run firs
 | # | Check | Where | Rule | On failure |
 |---|---|---|---|---|
 | 1 | Honeypot | Next.js | Hidden `website` field (off-screen, `tabIndex=-1`, `autoComplete="off"`). Humans leave it empty | Fake success, nothing sent to backend |
-| 2 | Minimum fill time | Next.js | The form carries a signed timestamp (HMAC with `FORM_SIGNING_SECRET`) set when the page renders. Reject if under 3 s or over 24 h old, or if the signature is wrong | Fake success |
+| 2 | Minimum fill time | Next.js | The form carries a signed timestamp (HMAC with `FORM_SIGNING_SECRET`) set when the page renders. Reject if under 3 s old or if the signature is wrong. Over 24 h old with a valid signature means a person with an old tab | Fake success; for an expired token, a visible error plus a fresh token so they can press Send again |
 | 3 | Validation | Both | Same limits in a Zod schema (Next) and Pydantic (FastAPI). FastAPI is the authority | 422, field errors shown in the user's language |
 | 4 | Link limit | FastAPI | More than 3 URLs in content | 422 "too many links" |
 | 5 | Rate limit per IP | FastAPI | Max 5 messages per ip_hash per hour | 429 + Retry-After |
 | 6 | Rate limit per email | FastAPI | Max 3 messages per email per hour | 429 |
 | 7 | Duplicate | FastAPI | Same content_hash within 24 h | Fake 202, not stored |
-| 8 | Login protection | FastAPI | 5 failed logins → account locked 15 min; max 10 login attempts per IP per 15 min | 429 |
+| 8 | Login protection | FastAPI | 5 failed logins → account locked 15 min; max 10 login attempts per IP per 15 min | Locked: the same 401 as a wrong password. Per-IP limit: 429 |
 
 **Why rate limits use Postgres, not an in-memory library.** An in-memory counter like slowapi's default resets on restart and isn't shared between uvicorn workers. Counting recent rows with the indexes above (`SELECT count(*) … WHERE ip_hash = :h AND created_at > now() - interval '1 hour'`) is exact, survives restarts and costs one indexed query. Add Redis only when traffic actually needs it.
 

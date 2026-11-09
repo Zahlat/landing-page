@@ -17,11 +17,13 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    environment: Literal["dev", "test", "prod"] = "dev"
+    # Safe by default: forgetting to set this must not turn the API docs on in production.
+    environment: Literal["dev", "test", "prod"] = "prod"
 
-    database_url: str
+    # SecretStr because these URLs contain the database password.
+    database_url: SecretStr
     # Only read by the test suite; never used by the running app.
-    test_database_url: str | None = None
+    test_database_url: SecretStr | None = None
 
     internal_token: SecretStr = Field(min_length=32)
     ip_hash_secret: SecretStr = Field(min_length=32)

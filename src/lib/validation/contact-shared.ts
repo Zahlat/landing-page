@@ -16,6 +16,8 @@ export type ContactFormState = {
   values: ContactFormValues;
   fieldErrors: Partial<Record<ContactField, ContactErrorKey>>;
   formError: ContactErrorKey | null;
+  /** Replaces the page's token once the original has expired. */
+  freshToken: string | null;
 };
 
 export const EMPTY_CONTACT_VALUES: ContactFormValues = { name: "", email: "", type: "", content: "" };

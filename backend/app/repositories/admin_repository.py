@@ -79,3 +79,23 @@ class AdminRepository:
         ).where(AdminLoginAttempt.ip_hash == ip_hash, AdminLoginAttempt.created_at > cutoff)
         count, oldest, now = (await self.session.execute(stmt)).one()
         return WindowCount(count=count, oldest=oldest, now=now)
+
+    # --- retention ------------------------------------------------------------
+
+    async def delete_login_attempts_older_than(self, age: timedelta) -> int:
+        cutoff = sa.func.now() - sa.literal(age, sa.Interval)
+        stmt = (
+            sa.delete(AdminLoginAttempt)
+            .where(AdminLoginAttempt.created_at < cutoff)
+            .returning(AdminLoginAttempt.id)
+        )
+        return len((await self.session.execute(stmt)).scalars().all())
+
+    async def delete_sessions_expired_longer_than(self, age: timedelta) -> int:
+        cutoff = sa.func.now() - sa.literal(age, sa.Interval)
+        stmt = (
+            sa.delete(AdminSession)
+            .where(AdminSession.expires_at < cutoff)
+            .returning(AdminSession.id)
+        )
+        return len((await self.session.execute(stmt)).scalars().all())

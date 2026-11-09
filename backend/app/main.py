@@ -8,7 +8,7 @@ from app.api.routes import admin_auth, admin_messages, health, messages
 from app.core.body_limit import BodySizeLimitMiddleware
 from app.core.config import Settings, get_settings
 from app.core.db import make_engine, make_sessionmaker
-from app.core.errors import register_error_handlers
+from app.core.errors import UnhandledErrorMiddleware, register_error_handlers
 from app.core.logging import configure_logging
 
 
@@ -27,7 +27,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        engine = make_engine(settings.database_url)
+        engine = make_engine(settings.database_url.get_secret_value())
         app.state.engine = engine
         app.state.sessionmaker = make_sessionmaker(engine)
         try:
@@ -47,6 +47,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # Outermost: rejects oversized bodies before routing or JSON parsing.
     app.add_middleware(BodySizeLimitMiddleware)
+    app.add_middleware(UnhandledErrorMiddleware)
     register_error_handlers(app)
     app.include_router(health.router)
     app.include_router(build_v1_router())

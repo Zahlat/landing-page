@@ -12,7 +12,7 @@ import {
   type ContactFormState,
 } from "@/lib/validation/contact-shared";
 
-const INITIAL_STATE: ContactFormState = { status: "idle", values: EMPTY_CONTACT_VALUES, fieldErrors: {}, formError: null };
+const INITIAL_STATE: ContactFormState = { status: "idle", values: EMPTY_CONTACT_VALUES, fieldErrors: {}, formError: null, freshToken: null };
 
 type Props = { locale: Locale; copy: ContactFormCopy; token: string };
 
@@ -40,7 +40,7 @@ export function ContactForm({ locale, copy, token }: Props) {
       <p className="contact-form-intro">{copy.intro}</p>
 
       <input type="hidden" name="locale" value={locale} />
-      <input type="hidden" name="formToken" value={token} />
+      <input type="hidden" name="formToken" value={state.freshToken ?? token} />
       {/* Honeypot: invisible to people and skipped by keyboard. Bots tend to fill it in. */}
       <div className="contact-honeypot" aria-hidden="true">
         <label htmlFor="contact-website">{copy.honeypot}</label>

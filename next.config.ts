@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // The largest real form is about 20 KB (5000 four-byte characters); the default is 1 MB.
+  experimental: { serverActions: { bodySizeLimit: "64kb" } },
   async headers() {
     return [{
       source: "/:path*",

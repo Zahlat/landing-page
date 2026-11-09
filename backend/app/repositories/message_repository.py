@@ -77,6 +77,21 @@ class MessageRepository:
             stmt = stmt.with_for_update()
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
+    async def blank_client_data_older_than(self, age: timedelta) -> int:
+        """Clears ip_hash and user_agent; the message itself is kept."""
+        cutoff = sa.func.now() - sa.literal(age, sa.Interval)
+        stmt = (
+            sa.update(ContactMessage)
+            .where(
+                ContactMessage.created_at < cutoff,
+                sa.or_(ContactMessage.ip_hash.is_not(None), ContactMessage.user_agent.is_not(None)),
+            )
+            .values(ip_hash=None, user_agent=None)
+            .returning(ContactMessage.id)
+            .execution_options(synchronize_session=False)
+        )
+        return len((await self.session.execute(stmt)).scalars().all())
+
     async def delete(self, message_id: int) -> bool:
         stmt = (
             sa.delete(ContactMessage)
