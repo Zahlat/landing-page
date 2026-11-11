@@ -228,3 +228,15 @@ button,a{-webkit-tap-highlight-color:transparent}
 /* Honeypot: clipped rather than positioned off-screen, which would add scroll on RTL pages. */
 .contact-honeypot{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 @media(max-width:630px){.contact-form-row{grid-template-columns:1fr}.contact-form-submit{justify-self:stretch}}
+
+/* Landing page tech stack: a deliberately compact section. */
+.tech-section{background:#fff;padding-block:76px}
+.tech-section .section-heading{margin-bottom:30px}
+.tech-section .section-heading h2{font-size:clamp(30px,3vw,42px)}
+.tech-logos{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+.tech-logos li{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-width:0;min-height:128px;padding:20px 10px;text-align:center;background:linear-gradient(150deg,#fff 30%,#f8fcf9);border:1px solid #dfede3;border-radius:18px;transition:border .24s,transform .24s}
+.tech-logos li:hover{border-color:#a7d9b5;transform:translateY(-3px)}
+.tech-logos img{width:46px;height:46px;object-fit:contain}
+.tech-logos span{font-size:13px;font-weight:650;line-height:1.4;color:var(--text)}
+@media(max-width:880px){.tech-section{padding-block:60px}.tech-logos{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:630px){.tech-logos{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.tech-logos li{min-height:116px;padding:16px 6px}.tech-logos span{font-size:12px}}

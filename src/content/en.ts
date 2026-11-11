@@ -1,9 +1,17 @@
+import { techLogos } from "./tech-logos";
 import type { SiteContent } from "./types";
 
 export const en: SiteContent = {
   seo: {
     title: "Meraki | Practical digital solutions for small businesses",
     description: "Meraki helps small and medium-sized businesses in Syria and the Arab region with websites, web applications, business and IT guidance, and marketing.",
+    pages: {
+      services: { title: "Web Development, Business Guidance & Marketing | Meraki", description: "Websites and web applications, business and IT guidance, and digital marketing for small and medium-sized businesses in Syria, sized to your goals and budget." },
+      approach: { title: "How We Work: Five Steps from Idea to Launch | Meraki", description: "Our five-step process: understand your idea, evaluate feasibility and risk, plan together, build and test, then launch and keep improving." },
+      work: { title: "Our Work | Meraki", description: "Real Meraki products and technical demonstrations. We don't present conceptual designs as client projects." },
+      about: { title: "About Meraki: Serving Small Businesses in Syria", description: "An early-stage team combining software engineering, business thinking, and creative communication for small and medium-sized businesses in Syria." },
+      contact: { title: "Contact Meraki on WhatsApp or Send a Message", description: "Tell us about your business on WhatsApp or through our contact form, and we'll work out the right services and a sensible starting point." },
+    },
   },
   brand: { descriptor: "Ideas. Solutions. Impact." },
   navigation: { home: "Home", services: "Services", approach: "Our process", work: "Our work", about: "About", contact: "Contact", menu: "Open menu", close: "Close menu", switchLang: "Switch to Arabic" },
@@ -58,6 +66,11 @@ export const en: SiteContent = {
     pledgeHeading: "No surprises. No shortcuts on trust.",
     pledgeText: "We value clear commitments, documented decisions, sensible security practices, honest communication, and quality over inflated promises. We'll tell you what we know, what we don't, and what needs to change.",
     values: ["Transparency", "Quality & security", "Client collaboration", "Continuous improvement"],
+  },
+  techStack: {
+    eyebrow: "OUR TECH STACK", heading: "The technology behind our work.",
+    description: "Proven, well-supported tools, chosen to fit what your project needs.",
+    items: techLogos,
   },
   about: {
     eyebrow: "ABOUT MERAKI", title: "Thoughtful work starts with understanding people.",

@@ -9,6 +9,8 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { ServiceGrid } from "@/components/ui/service-grid";
 import { ProcessSteps } from "@/components/ui/process-steps";
 import { ContactPanel } from "@/components/ui/contact-panel";
+import { TechStack } from "@/components/ui/tech-stack";
+import { OrganizationJsonLd } from "@/components/seo/organization-json-ld";
 
 type Props = { params: Promise<{ lang: string }> };
 
@@ -23,6 +25,7 @@ export default async function HomePage({ params }: Props) {
   if (!isLocale(lang)) notFound();
   const t = getContent(lang);
   return <>
+    <OrganizationJsonLd locale={lang}/>
     <section className="hero-section" id="home"><div className="hero-bloom" aria-hidden="true"/><div className="container hero-grid">
       <div className="hero-copy"><p className="eyebrow"><span className="eyebrow-square"/>{t.hero.eyebrow}</p>
         <h1>{t.hero.lineOne}<span>{t.hero.lineTwo}</span></h1>
@@ -43,6 +46,7 @@ export default async function HomePage({ params }: Props) {
       <ProcessSteps steps={t.approach.steps}/>
       <div className="pledge-card"><div><span className="pledge-mark">✦</span><h3>{t.approach.pledgeHeading}</h3><p>{t.approach.pledgeText}</p></div><ul>{t.approach.values.map((v) => <li key={v}><span aria-hidden="true">✓</span>{v}</li>)}</ul></div>
     </div></section>
+    <TechStack content={t.techStack}/>
     <ContactPanel locale={lang}/>
   </>;
 }

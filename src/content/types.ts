@@ -14,6 +14,7 @@ export type MethodStep = {
   short: string;
   outcome: string;
 };
+export type TechLogo = { name: string; logo: string };
 export type ContactFormErrors = {
   nameRequired: string;
   nameTooLong: string;
@@ -45,7 +46,7 @@ export type ContactFormCopy = {
   errors: ContactFormErrors;
 };
 export type SiteContent = {
-  seo: { title: string; description: string };
+  seo: { title: string; description: string; pages: Record<"services" | "approach" | "work" | "about" | "contact", { title: string; description: string }> };
   brand: { descriptor: string };
   navigation: { home: string; services: string; approach: string; work: string; about: string; contact: string; menu: string; close: string; switchLang: string };
   labels: { discover: string; build: string; grow: string; scroll: string; learnMore: string; comingSoon: string; home: string; principles: string };
@@ -53,6 +54,7 @@ export type SiteContent = {
   visual: { eyebrow: string; title: string; coreLabel: string; descriptions: string[]; phases: string[]; note: string };
   services: { eyebrow: string; heading: string; description: string; items: Service[]; footer: string };
   approach: { eyebrow: string; heading: string; description: string; steps: MethodStep[]; pledgeHeading: string; pledgeText: string; values: string[] };
+  techStack: { eyebrow: string; heading: string; description: string; items: TechLogo[] };
   about: { eyebrow: string; title: string; lead: string; sections: { title: string; description: string }[] };
   work: { eyebrow: string; heading: string; intro: string; emptyTitle: string; emptyText: string; kind: Record<"Product" | "Demo" | "Client work", string>; challenge: string; solution: string; outcome: string; technologies: string };
   contact: { eyebrow: string; heading: string; description: string; whatsapp: string; pending: string; pendingDetail: string; prompt: string; message: string; details: string[]; form: ContactFormCopy };
