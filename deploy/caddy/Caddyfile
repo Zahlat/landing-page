@@ -1,0 +1,14 @@
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	reverse_proxy {
+		# Re-resolves web, so added or replaced replicas receive traffic.
+		dynamic a {
+			name web
+			port 3000
+			refresh 5s
+		}
+		# Overwrites anything the visitor sent, which is what makes this header trustworthy.
+		header_up X-Real-IP {remote_host}
+	}
+}

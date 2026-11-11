@@ -1,0 +1,4 @@
+# These run inside Linux containers, where Windows line endings break them.
+*.sh text eol=lf
+Dockerfile text eol=lf
+deploy/caddy/Caddyfile text eol=lf

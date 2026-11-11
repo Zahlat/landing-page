@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Set only inside the Docker build: standalone output needs symlinks that Windows restricts,
+  // and `npm run start` doesn't use it.
+  ...(process.env.NEXT_OUTPUT === "standalone" ? { output: "standalone" as const } : {}),
   poweredByHeader: false,
   // The largest real form is about 20 KB (5000 four-byte characters); the default is 1 MB.
   experimental: { serverActions: { bodySizeLimit: "64kb" } },

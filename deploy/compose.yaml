@@ -1,0 +1,178 @@
+# Meraki production stack. Run from this folder; settings live in deploy/.env.
+# Only the edge service (tunnel or caddy) is reachable from outside.
+
+name: meraki
+
+x-service: &service
+  restart: unless-stopped
+  init: true
+  security_opt:
+    - no-new-privileges:true
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+x-api-env: &api-env
+  ENVIRONMENT: prod
+  DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://meraki_app:${APP_DB_PASSWORD:-}@db:5432/meraki}
+  INTERNAL_TOKEN: ${INTERNAL_TOKEN:?set INTERNAL_TOKEN in deploy/.env}
+  IP_HASH_SECRET: ${IP_HASH_SECRET:?set IP_HASH_SECRET in deploy/.env}
+
+x-api-image: &api-image
+  image: ${API_IMAGE:-meraki-api:local}
+  build:
+    context: ../backend
+
+services:
+  db:
+    <<: *service
+    image: postgres:17-alpine
+    profiles: [db]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB: meraki
+      APP_DB_USER: meraki_app
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./postgres/10-app-role.sh:/docker-entrypoint-initdb.d/10-app-role.sh:ro
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d meraki"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 1g
+
+  # Applies database migrations, then exits. The API only starts once this has succeeded.
+  migrate:
+    <<: [*service, *api-image]
+    restart: "no"
+    command: ["alembic", "upgrade", "head"]
+    environment: *api-env
+    depends_on:
+      db:
+        condition: service_healthy
+        required: false
+    networks: [internal]
+    read_only: true
+    cap_drop: [ALL]
+
+  api:
+    <<: [*service, *api-image]
+    environment: *api-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [internal]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    mem_limit: 512m
+    deploy:
+      replicas: ${API_REPLICAS:-1}
+
+  web:
+    <<: *service
+    image: ${WEB_IMAGE:-meraki-web:local}
+    build:
+      context: ..
+      args:
+        NEXT_PUBLIC_SITE_URL: ${SITE_URL:?set SITE_URL in deploy/.env}
+        WHATSAPP_NUMBER: ${WHATSAPP_NUMBER:-}
+    environment:
+      BACKEND_URL: http://api:8000
+      BACKEND_INTERNAL_TOKEN: ${INTERNAL_TOKEN:?set INTERNAL_TOKEN in deploy/.env}
+      FORM_SIGNING_SECRET: ${FORM_SIGNING_SECRET:?set FORM_SIGNING_SECRET in deploy/.env}
+      TRUSTED_CLIENT_IP_HEADER: ${TRUSTED_CLIENT_IP_HEADER:?set TRUSTED_CLIENT_IP_HEADER in deploy/.env}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [internal, edge]
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next/cache:uid=1001,gid=1001
+    cap_drop: [ALL]
+    mem_limit: 512m
+    deploy:
+      replicas: ${WEB_REPLICAS:-1}
+
+  # Edge option 1: Cloudflare Tunnel. Makes an outbound connection, so no ports are opened.
+  tunnel:
+    <<: *service
+    image: cloudflare/cloudflared:2026.10.7
+    profiles: [tunnel]
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      web:
+        condition: service_healthy
+    networks: [edge]
+    read_only: true
+    cap_drop: [ALL]
+    mem_limit: 128m
+
+  # Edge option 2: Caddy on a normal server, with automatic HTTPS certificates.
+  caddy:
+    <<: *service
+    image: caddy:2.11.9-alpine
+    profiles: [caddy]
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+    networks: [edge]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    mem_limit: 128m
+
+  # Maintenance jobs, run on demand or from cron:
+  #   docker compose run --rm backup
+  #   docker compose run --rm purge
+  backup:
+    image: postgres:17-alpine
+    profiles: [ops]
+    command: ["sh", "/scripts/backup.sh"]
+    environment:
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD:-}
+      POSTGRES_DB: meraki
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+    volumes:
+      - ./scripts/backup.sh:/scripts/backup.sh:ro
+      - ./backups:/backups
+    networks: [internal]
+
+  purge:
+    <<: *api-image
+    profiles: [ops]
+    command: ["python", "-m", "app.cli", "purge-old-data"]
+    environment: *api-env
+    networks: [internal]
+    read_only: true
+    cap_drop: [ALL]
+
+networks:
+  # No route to the internet: the API and database can only talk to each other and web.
+  internal:
+    internal: true
+  edge: {}
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:

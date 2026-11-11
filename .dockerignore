@@ -1,0 +1,16 @@
+.git
+.github
+.idea
+.vscode
+.next
+node_modules
+out
+backend
+deploy
+docs
+*.md
+*.tsbuildinfo
+.env
+.env.*
+Dockerfile
+.dockerignore

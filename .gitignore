@@ -11,6 +11,9 @@ out
 .env.*
 !.env.example
 
+# Database dumps contain visitor data
+deploy/backups/
+
 # Python / backend
 backend/.venv/
 __pycache__/

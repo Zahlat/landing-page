@@ -1,0 +1,8 @@
+# Try the production stack on your own computer, without a tunnel or a domain:
+#   docker compose -f compose.yaml -f compose.local.yaml up -d --build
+# Then open http://localhost:3000
+
+services:
+  web:
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3000}:3000"

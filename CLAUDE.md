@@ -33,6 +33,7 @@ Full plan: docs/PLAN.md. Follow it; ask before deviating.
 - Migrations:    cd backend && uv run alembic revision --autogenerate -m "..." && uv run alembic upgrade head
 - Retention:     cd backend && uv run python -m app.cli purge-old-data
 - Frontend:      npm run dev / npm run build / npm run lint / npm run typecheck
+- Deployment:    see deploy/README.md (Docker Compose stack in deploy/)
 - psql (not on PATH): "C:\Program Files\PostgreSQL\17\bin\psql.exe" -U meraki -d meraki
 - Dev OS is Windows; PostgreSQL 17 runs as the postgresql-x64-17 service on localhost:5432.
 
